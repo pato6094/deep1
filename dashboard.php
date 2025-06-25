@@ -173,6 +173,20 @@ function generate_deeplink_url($link) {
         .copy-btn.copied {
             background: #17a2b8;
         }
+        .delete-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            margin-left: 0.25rem;
+            transition: background-color 0.3s ease;
+        }
+        .delete-btn:hover {
+            background: #c82333;
+        }
         .deeplink-title {
             font-weight: 600;
             color: #333;
@@ -230,6 +244,7 @@ function generate_deeplink_url($link) {
                 <a href="index.php" class="logo">DeepLink Pro</a>
                 <div class="nav-links">
                     <span>Ciao, <?= htmlspecialchars($_SESSION['user_name']) ?>!</span>
+                    <a href="profile.php">Profilo</a>
                     <?php if (!$has_subscription): ?>
                         <a href="pricing.php" class="btn btn-success" style="padding: 0.5rem 1rem;">Upgrade Premium</a>
                     <?php endif; ?>
@@ -415,6 +430,9 @@ function generate_deeplink_url($link) {
                                         <button class="copy-btn" onclick="copyToClipboard('<?= generate_deeplink_url($link) ?>', this)">
                                             Copia
                                         </button>
+                                        <button class="delete-btn" onclick="deleteDeeplink('<?= $link['id'] ?>', this)">
+                                            Elimina
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
@@ -463,7 +481,7 @@ function generate_deeplink_url($link) {
                                 $is_expired = is_deeplink_expired($link['created_at'], $has_subscription);
                                 $days_remaining = get_days_until_expiry($link['created_at'], $has_subscription);
                             ?>
-                            <tr>
+                            <tr id="deeplink-row-<?= $link['id'] ?>">
                                 <td>
                                     <div class="deeplink-title">
                                         <?= htmlspecialchars($link['title']) ?>
@@ -520,6 +538,9 @@ function generate_deeplink_url($link) {
                                         <?php else: ?>
                                             <span style="color: #6c757d; font-size: 0.875rem;">Link scaduto</span>
                                         <?php endif; ?>
+                                        <button class="delete-btn" onclick="deleteDeeplink('<?= $link['id'] ?>', this)">
+                                            Elimina
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
@@ -606,6 +627,64 @@ function generate_deeplink_url($link) {
                     button.textContent = originalText;
                     button.classList.remove('copied');
                 }, 2000);
+            });
+        }
+
+        function deleteDeeplink(id, button) {
+            if (!confirm('Sei sicuro di voler eliminare questo deeplink? Questa azione non può essere annullata.')) {
+                return;
+            }
+
+            const originalText = button.textContent;
+            button.textContent = 'Eliminando...';
+            button.disabled = true;
+
+            fetch('delete_deeplink.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    id: id
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Rimuovi la riga dalla tabella con animazione
+                    const row = document.getElementById('deeplink-row-' + id);
+                    if (row) {
+                        row.style.transition = 'opacity 0.3s ease';
+                        row.style.opacity = '0';
+                        setTimeout(() => {
+                            row.remove();
+                        }, 300);
+                    }
+                    
+                    // Mostra messaggio di successo
+                    const alert = document.createElement('div');
+                    alert.className = 'alert alert-success';
+                    alert.textContent = 'Deeplink eliminato con successo!';
+                    alert.style.position = 'fixed';
+                    alert.style.top = '20px';
+                    alert.style.right = '20px';
+                    alert.style.zIndex = '9999';
+                    document.body.appendChild(alert);
+                    
+                    setTimeout(() => {
+                        alert.remove();
+                    }, 3000);
+                } else {
+                    alert('Errore: ' + data.message);
+                    button.textContent = originalText;
+                    button.disabled = false;
+                }
+            })
+            .catch(error => {
+                console.error('Errore:', error);
+                alert('Errore durante l\'eliminazione del deeplink');
+                button.textContent = originalText;
+                button.disabled = false;
             });
         }
 

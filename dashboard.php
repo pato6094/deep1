@@ -70,7 +70,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['url'])) {
                         ':custom_name' => $has_subscription && !empty($custom_name) ? $custom_name : null
                     ])) {
                         $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https" : "http";
-                        $deeplink_url = "$protocol://" . $_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF']) . "/redirect.php?id=$id";
+                        $base_url = "$protocol://" . $_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF']);
+                        
+                        // Se ha un nome personalizzato, usa l'URL personalizzato
+                        if ($has_subscription && !empty($custom_name)) {
+                            $deeplink_url = "$base_url/$custom_name";
+                        } else {
+                            $deeplink_url = "$base_url/redirect.php?id=$id";
+                        }
+                        
                         $success = "Deeplink creato con successo!";
                     } else {
                         $error = "Errore durante la creazione del deeplink.";
@@ -106,6 +114,18 @@ if ($has_subscription) {
     ");
     $stmt->execute([':user_id' => $user_id]);
     $top_deeplinks = $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+// Funzione helper per generare l'URL del deeplink
+function generate_deeplink_url($link) {
+    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https" : "http";
+    $base_url = "$protocol://" . $_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF']);
+    
+    if ($link['custom_name']) {
+        return "$base_url/" . $link['custom_name'];
+    } else {
+        return "$base_url/redirect.php?id=" . $link['id'];
+    }
 }
 ?>
 
@@ -167,10 +187,34 @@ if ($has_subscription) {
             font-weight: 600;
             margin-left: 0.5rem;
         }
+        .custom-url-badge {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 0.125rem 0.5rem;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.5rem;
+        }
         .form-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 1rem;
+        }
+        .url-preview {
+            background: #f8f9fa;
+            border: 2px dashed #dee2e6;
+            border-radius: 8px;
+            padding: 0.75rem;
+            margin-top: 0.5rem;
+            font-family: monospace;
+            font-size: 0.9rem;
+            color: #495057;
+        }
+        .url-preview.active {
+            border-color: #28a745;
+            background: #d4edda;
+            color: #155724;
         }
         @media (max-width: 768px) {
             .form-row {
@@ -223,7 +267,7 @@ if ($has_subscription) {
                 <p style="color: #666; margin-bottom: 2rem;">
                     Supportiamo YouTube, Instagram, Twitch, Amazon e molti altri servizi
                     <?php if ($has_subscription): ?>
-                        <br><span style="color: #28a745; font-weight: 600;">✓ Premium: Personalizza i tuoi link con nomi custom!</span>
+                        <br><span style="color: #28a745; font-weight: 600;">✓ Premium: URL personalizzati e link permanenti!</span>
                     <?php endif; ?>
                 </p>
                 
@@ -270,8 +314,12 @@ if ($has_subscription) {
                                    value="<?= htmlspecialchars($_POST['custom_name'] ?? '') ?>"
                                    pattern="[a-zA-Z0-9\-_]+" 
                                    minlength="3" maxlength="20"
+                                   oninput="updateUrlPreview()"
                                    <?= !$can_create ? 'disabled' : '' ?>>
                             <small style="color: #666;">Opzionale. Solo lettere, numeri, trattini e underscore (3-20 caratteri)</small>
+                            <div id="url-preview" class="url-preview">
+                                <?= (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https" : "http" ?>://<?= $_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF']) ?>/tuo-nome-personalizzato
+                            </div>
                         </div>
                         <?php endif; ?>
                     </div>
@@ -283,7 +331,11 @@ if ($has_subscription) {
                 
                 <?php if ($deeplink_url): ?>
                     <div class="result">
-                        <strong>Il tuo deeplink è pronto!</strong><br>
+                        <strong>Il tuo deeplink è pronto!</strong>
+                        <?php if ($has_subscription && !empty($_POST['custom_name'])): ?>
+                            <span class="custom-url-badge">URL PERSONALIZZATO</span>
+                        <?php endif; ?>
+                        <br>
                         <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem;">
                             <a href="<?= htmlspecialchars($deeplink_url) ?>" target="_blank" style="word-break: break-all;">
                                 <?= htmlspecialchars($deeplink_url) ?>
@@ -295,7 +347,7 @@ if ($has_subscription) {
                         <?php if (!$has_subscription): ?>
                             <div class="expiry-info">
                                 ⏰ <strong>Attenzione:</strong> Questo link scadrà tra 5 giorni. 
-                                <a href="pricing.php" style="color: #856404;">Passa a Premium</a> per link permanenti!
+                                <a href="pricing.php" style="color: #856404;">Passa a Premium</a> per link permanenti e URL personalizzati!
                             </div>
                         <?php endif; ?>
                     </div>
@@ -332,7 +384,7 @@ if ($has_subscription) {
                                     <div class="deeplink-title">
                                         <?= htmlspecialchars($link['title']) ?>
                                         <?php if ($link['custom_name']): ?>
-                                            <span class="custom-name-badge"><?= htmlspecialchars($link['custom_name']) ?></span>
+                                            <span class="custom-url-badge">CUSTOM</span>
                                         <?php endif; ?>
                                     </div>
                                 </td>
@@ -356,11 +408,11 @@ if ($has_subscription) {
                                 </td>
                                 <td>
                                     <div style="display: flex; gap: 0.25rem; flex-wrap: wrap;">
-                                        <a href="redirect.php?id=<?= $link['id'] ?>" target="_blank" 
+                                        <a href="<?= generate_deeplink_url($link) ?>" target="_blank" 
                                            class="btn btn-secondary btn-sm">
                                             Apri
                                         </a>
-                                        <button class="copy-btn" onclick="copyDeeplink('<?= $link['id'] ?>', this)">
+                                        <button class="copy-btn" onclick="copyToClipboard('<?= generate_deeplink_url($link) ?>', this)">
                                             Copia
                                         </button>
                                     </div>
@@ -416,7 +468,7 @@ if ($has_subscription) {
                                     <div class="deeplink-title">
                                         <?= htmlspecialchars($link['title']) ?>
                                         <?php if ($link['custom_name']): ?>
-                                            <span class="custom-name-badge"><?= htmlspecialchars($link['custom_name']) ?></span>
+                                            <span class="custom-url-badge">CUSTOM</span>
                                         <?php endif; ?>
                                     </div>
                                 </td>
@@ -458,11 +510,11 @@ if ($has_subscription) {
                                 <td>
                                     <div style="display: flex; gap: 0.25rem; flex-wrap: wrap;">
                                         <?php if (!$is_expired): ?>
-                                            <a href="redirect.php?id=<?= $link['id'] ?>" target="_blank" 
+                                            <a href="<?= generate_deeplink_url($link) ?>" target="_blank" 
                                                class="btn btn-secondary btn-sm">
                                                 Apri
                                             </a>
-                                            <button class="copy-btn" onclick="copyDeeplink('<?= $link['id'] ?>', this)">
+                                            <button class="copy-btn" onclick="copyToClipboard('<?= generate_deeplink_url($link) ?>', this)">
                                                 Copia
                                             </button>
                                         <?php else: ?>
@@ -507,16 +559,16 @@ if ($has_subscription) {
                     <div class="tip-item">
                         <div class="tip-icon">🔗</div>
                         <div class="tip-content">
-                            <h3>Link Personalizzati</h3>
-                            <p>Usa nomi personalizzati per rendere i tuoi deeplink più memorabili e professionali</p>
+                            <h3>URL Personalizzati</h3>
+                            <p>Usa nomi personalizzati per creare URL più puliti e memorabili come: tuosito.com/mio-link</p>
                         </div>
                     </div>
                     <?php else: ?>
                     <div class="tip-item">
                         <div class="tip-icon">📊</div>
                         <div class="tip-content">
-                            <h3>Statistiche Premium</h3>
-                            <p><a href="pricing.php" style="color: #667eea;">Passa a Premium</a> per vedere le statistiche dettagliate dei click</p>
+                            <h3>Funzionalità Premium</h3>
+                            <p><a href="pricing.php" style="color: #667eea;">Passa a Premium</a> per URL personalizzati e statistiche dettagliate</p>
                         </div>
                     </div>
                     <?php endif; ?>
@@ -557,14 +609,27 @@ if ($has_subscription) {
             });
         }
 
-        function copyDeeplink(id, button) {
-            const protocol = window.location.protocol;
-            const host = window.location.host;
-            const path = window.location.pathname.replace('/dashboard.php', '');
-            const deeplink_url = `${protocol}//${host}${path}/redirect.php?id=${id}`;
+        <?php if ($has_subscription): ?>
+        function updateUrlPreview() {
+            const customName = document.getElementById('custom_name').value;
+            const preview = document.getElementById('url-preview');
+            const protocol = '<?= (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https" : "http" ?>';
+            const host = '<?= $_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF']) ?>';
             
-            copyToClipboard(deeplink_url, button);
+            if (customName && customName.length >= 3) {
+                preview.textContent = `${protocol}://${host}/${customName}`;
+                preview.classList.add('active');
+            } else {
+                preview.textContent = `${protocol}://${host}/tuo-nome-personalizzato`;
+                preview.classList.remove('active');
+            }
         }
+
+        // Inizializza l'anteprima URL al caricamento della pagina
+        document.addEventListener('DOMContentLoaded', function() {
+            updateUrlPreview();
+        });
+        <?php endif; ?>
     </script>
 </body>
 </html>

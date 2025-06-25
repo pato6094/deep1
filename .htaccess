@@ -1,0 +1,18 @@
+# Rewrite rules per deeplink personalizzati
+RewriteEngine On
+
+# Regola per i deeplink personalizzati (solo per nomi custom)
+# Esclude file e directory esistenti
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+# Esclude le directory principali del sistema
+RewriteCond %{REQUEST_URI} !^/(admin|auth|assets|config|includes|supabase)/
+# Esclude i file PHP principali
+RewriteCond %{REQUEST_URI} !^/(index|dashboard|pricing|countdown|redirect|process_subscription|update_click|setup_admin)\.php$
+# Cattura solo nomi alfanumerici con trattini e underscore (3-20 caratteri)
+RewriteRule ^([a-zA-Z0-9\-_]{3,20})/?$ custom_redirect.php?name=$1 [L,QSA]
+
+# Regola di fallback per i link tradizionali
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^redirect\.php$ redirect.php [L]

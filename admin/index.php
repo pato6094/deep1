@@ -20,15 +20,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['upgrade_user'])) {
     $user_id = (int)$_POST['user_id'];
     
     try {
+        $end_date = date('Y-m-d H:i:s', strtotime('+1 month'));
+        
         $stmt = $pdo->prepare("
-            UPDATE users 
-            SET subscription_status = 'active',
-                subscription_start = NOW(),
-                subscription_end = DATE_ADD(NOW(), INTERVAL 1 YEAR)
-            WHERE id = :user_id
+            CALL UpdateSubscriptionSimple(?, 'active', ?, 'admin', 'manual_upgrade', ?)
         ");
         
-        if ($stmt->execute([':user_id' => $user_id])) {
+        $notes = "Upgrade manuale da admin dashboard";
+        
+        if ($stmt->execute([$user_id, $end_date, $notes])) {
             $success = "Utente aggiornato a Premium con successo!";
         } else {
             $error = "Errore durante l'aggiornamento dell'utente.";
@@ -44,15 +44,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['downgrade_user'])) {
     
     try {
         $stmt = $pdo->prepare("
-            UPDATE users 
-            SET subscription_status = 'free',
-                subscription_start = NULL,
-                subscription_end = NULL,
-                subscription_id = NULL
-            WHERE id = :user_id
+            CALL UpdateSubscriptionSimple(?, 'free', NULL, 'admin', 'manual_downgrade', ?)
         ");
         
-        if ($stmt->execute([':user_id' => $user_id])) {
+        $notes = "Downgrade manuale da admin dashboard";
+        
+        if ($stmt->execute([$user_id, $notes])) {
             $success = "Utente riportato al piano gratuito con successo!";
         } else {
             $error = "Errore durante il downgrade dell'utente.";
@@ -201,6 +198,29 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
         .pagination a:hover {
             background: #f8f9fa;
         }
+        .quick-links {
+            background: #e7f3ff;
+            border: 1px solid #b3d7ff;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 2rem;
+        }
+        .quick-links a {
+            display: inline-block;
+            margin-right: 1rem;
+            margin-bottom: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: white;
+            color: #004085;
+            text-decoration: none;
+            border-radius: 5px;
+            border: 1px solid #b3d7ff;
+            transition: all 0.3s ease;
+        }
+        .quick-links a:hover {
+            background: #004085;
+            color: white;
+        }
     </style>
 </head>
 <body>
@@ -219,6 +239,14 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     <main class="main">
         <div class="container">
+            <!-- Link Rapidi -->
+            <div class="quick-links">
+                <h3 style="margin-bottom: 1rem; color: #004085;">🚀 Accesso Rapido</h3>
+                <a href="subscription_management_simple.php">📊 Gestione Abbonamenti</a>
+                <a href="paypal_check.php">🔍 Controllo PayPal</a>
+                <a href="../check_subscriptions_simple.php" target="_blank">⚙️ Controllo Scadenze</a>
+            </div>
+
             <!-- Statistiche Admin -->
             <div class="admin-stats">
                 <div class="admin-stat-card">
@@ -303,7 +331,6 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                             switch($user['subscription_status']) {
                                                 case 'active': echo 'Premium'; break;
                                                 case 'expired': echo 'Scaduto'; break;
-                                                case 'cancelled': echo 'Cancellato'; break;
                                                 default: echo 'Gratuito';
                                             }
                                             ?>
@@ -412,7 +439,42 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     </div>
                 </div>
             </div>
+
+            <!-- Avviso Sistema Semplificato -->
+            <div class="card" style="background: #fff3cd; border: 1px solid #ffeaa7;">
+                <h2 style="color: #856404;">⚠️ Sistema di Gestione Semplificato</h2>
+                <p style="color: #856404; margin-bottom: 1rem;">
+                    <strong>Importante:</strong> Questo sistema NON si aggiorna automaticamente quando gli utenti cancellano su PayPal.
+                </p>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+                    <div>
+                        <h3 style="color: #856404;">✅ Cosa Funziona Automaticamente:</h3>
+                        <ul style="color: #856404;">
+                            <li>Controllo scadenze giornaliero</li>
+                            <li>Passaggio automatico a "scaduto"</li>
+                            <li>Statistiche e report</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 style="color: #856404;">🔧 Gestione Manuale Necessaria:</h3>
+                        <ul style="color: #856404;">
+                            <li>Cancellazioni PayPal</li>
+                            <li>Problemi di pagamento</li>
+                            <li>Richieste di supporto utenti</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 style="color: #856404;">🛠️ Strumenti Disponibili:</h3>
+                        <ul style="color: #856404;">
+                            <li><a href="paypal_check.php" style="color: #856404;">Controllo PayPal</a></li>
+                            <li><a href="subscription_management_simple.php" style="color: #856404;">Gestione Abbonamenti</a></li>
+                            <li>Upgrade/Downgrade manuali</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
         </div>
     </main>
 </body>
 </html>
+```

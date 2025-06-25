@@ -61,35 +61,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
     }
 }
 
-// Gestione cancellazione abbonamento
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancel_subscription'])) {
-    if ($has_subscription) {
-        try {
-            $stmt = $pdo->prepare("
-                UPDATE users 
-                SET subscription_status = 'cancelled'
-                WHERE id = :user_id
-            ");
-            
-            if ($stmt->execute([':user_id' => $user_id])) {
-                $success = 'Abbonamento cancellato. Rimarrà attivo fino alla scadenza naturale.';
-                // Aggiorna i dati utente
-                $stmt = $pdo->prepare("
-                    SELECT name, email, subscription_status, subscription_start, subscription_end, subscription_id, created_at 
-                    FROM users 
-                    WHERE id = :user_id
-                ");
-                $stmt->execute([':user_id' => $user_id]);
-                $user = $stmt->fetch(PDO::FETCH_ASSOC);
-            } else {
-                $error = 'Errore durante la cancellazione dell\'abbonamento.';
-            }
-        } catch (Exception $e) {
-            $error = 'Errore del server durante la cancellazione.';
-        }
-    }
-}
-
 // Statistiche utente
 $stmt = $pdo->prepare("
     SELECT 
@@ -177,6 +148,35 @@ $stats = $stmt->fetch(PDO::FETCH_ASSOC);
             font-size: 0.875rem;
             color: #666;
         }
+        .cancel-subscription-btn {
+            background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+            color: #212529;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .cancel-subscription-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 193, 7, 0.4);
+        }
+        .cancel-subscription-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        .paypal-info {
+            background: #e7f3ff;
+            border: 1px solid #b3d7ff;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            color: #004085;
+        }
     </style>
 </head>
 <body>
@@ -246,12 +246,16 @@ $stats = $stmt->fetch(PDO::FETCH_ASSOC);
                             </span>
                         </div>
                         <p style="color: #856404; margin-bottom: 1rem;">
-                            Il tuo abbonamento è stato cancellato ma rimarrà attivo fino al 
+                            Il tuo abbonamento è stato cancellato su PayPal e rimarrà attivo fino al 
                             <strong><?= date('d/m/Y', strtotime($user['subscription_end'])) ?></strong>.
                         </p>
                         <p style="color: #666; margin-bottom: 1.5rem;">
                             Dopo questa data, il tuo account tornerà al piano gratuito.
                         </p>
+                        <div class="paypal-info">
+                            <strong>ℹ️ Informazione:</strong> L'abbonamento è stato cancellato anche su PayPal. 
+                            Non verranno effettuati ulteriori addebiti automatici.
+                        </div>
                     <?php else: ?>
                         <div style="margin: 1rem 0;">
                             <span style="background: #28a745; color: white; padding: 0.25rem 0.75rem; border-radius: 12px; font-weight: 600;">
@@ -269,12 +273,15 @@ $stats = $stmt->fetch(PDO::FETCH_ASSOC);
                             <li>✓ Link permanenti</li>
                         </ul>
                         
-                        <form method="POST" style="display: inline;">
-                            <button type="submit" name="cancel_subscription" class="btn btn-secondary"
-                                    onclick="return confirm('Sei sicuro di voler cancellare l\'abbonamento? Rimarrà attivo fino alla scadenza naturale.')">
-                                Cancella Abbonamento
-                            </button>
-                        </form>
+                        <button type="button" id="cancelSubscriptionBtn" class="cancel-subscription-btn"
+                                onclick="cancelSubscription()">
+                            Cancella Abbonamento PayPal
+                        </button>
+                        
+                        <div class="paypal-info">
+                            <strong>💳 PayPal:</strong> La cancellazione avverrà direttamente su PayPal. 
+                            L'abbonamento rimarrà attivo fino alla scadenza naturale, ma non si rinnoverà automaticamente.
+                        </div>
                     <?php endif; ?>
                     
                     <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #dee2e6;">
@@ -377,5 +384,57 @@ $stats = $stmt->fetch(PDO::FETCH_ASSOC);
             </div>
         </div>
     </main>
+
+    <script>
+        function cancelSubscription() {
+            if (!confirm('Sei sicuro di voler cancellare l\'abbonamento PayPal?\n\nL\'abbonamento rimarrà attivo fino alla scadenza naturale, ma non si rinnoverà automaticamente.\n\nQuesta azione non può essere annullata.')) {
+                return;
+            }
+
+            const button = document.getElementById('cancelSubscriptionBtn');
+            const originalText = button.textContent;
+            
+            button.textContent = 'Cancellando su PayPal...';
+            button.disabled = true;
+
+            fetch('cancel_subscription.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Mostra messaggio di successo
+                    const alert = document.createElement('div');
+                    alert.className = 'alert alert-success';
+                    alert.textContent = data.message;
+                    alert.style.position = 'fixed';
+                    alert.style.top = '20px';
+                    alert.style.right = '20px';
+                    alert.style.zIndex = '9999';
+                    alert.style.maxWidth = '400px';
+                    document.body.appendChild(alert);
+                    
+                    // Ricarica la pagina dopo 2 secondi
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 2000);
+                } else {
+                    alert('Errore: ' + data.message);
+                    button.textContent = originalText;
+                    button.disabled = false;
+                }
+            })
+            .catch(error => {
+                console.error('Errore:', error);
+                alert('Errore durante la cancellazione dell\'abbonamento');
+                button.textContent = originalText;
+                button.disabled = false;
+            });
+        }
+    </script>
 </body>
 </html>

@@ -30,7 +30,12 @@ $subscription_id = $user['subscription_id'];
 // Configurazione PayPal
 $paypal_client_id = 'AQJDnagVff_mI2EtgXHdsCD_hduUKkOwKnGn2goqziCThEKDgzGDV3UWbza5b6Bz5w-kz4Ba-qqwxWyr';
 $paypal_client_secret = 'EBWKjlELKMYqRNQ6sVD4XfSqjE7ty5TuHVIxHQMp_2MU8mMpnpep7_7txjWKqQOOBxaU6RuJzJHVxUOE'; // Sostituisci con il tuo client secret
-$paypal_base_url = 'https://api-m.sandbox.paypal.com'; // Usa https://api-m.paypal.com per produzione
+
+// SANDBOX: Usa questo URL per i test
+$paypal_base_url = 'https://api-m.sandbox.paypal.com';
+
+// PRODUZIONE: Quando vai in produzione, cambia con questo URL
+// $paypal_base_url = 'https://api-m.paypal.com';
 
 try {
     // 1. Ottieni token di accesso PayPal

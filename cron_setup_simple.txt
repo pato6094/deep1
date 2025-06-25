@@ -1,0 +1,42 @@
+# Configurazione Cron Job per il controllo automatico degli abbonamenti (versione semplificata)
+# 
+# Questo sistema NON usa API PayPal, ma si basa solo su controlli di date
+#
+# Per modificare il crontab:
+# crontab -e
+#
+# Aggiungi questa riga:
+
+0 2 * * * /usr/bin/php /path/to/your/project/check_subscriptions_simple.php >> /var/log/subscription_check_simple.log 2>&1
+
+# Spiegazione:
+# 0 2 * * * = Ogni giorno alle 02:00
+# /usr/bin/php = Percorso dell'eseguibile PHP (potrebbe variare)
+# /path/to/your/project/check_subscriptions_simple.php = Percorso completo al file
+# >> /var/log/subscription_check_simple.log = Salva l'output in un file di log
+# 2>&1 = Reindirizza anche gli errori nel file di log
+
+# Esempio per eseguire ogni ora (per test):
+# 0 * * * * /usr/bin/php /path/to/your/project/check_subscriptions_simple.php
+
+# Esempio per eseguire ogni 6 ore:
+# 0 */6 * * * /usr/bin/php /path/to/your/project/check_subscriptions_simple.php
+
+# VANTAGGI DEL SISTEMA SEMPLIFICATO:
+# ✅ Nessuna dipendenza da API esterne
+# ✅ Controllo basato solo su date
+# ✅ Gestione manuale completa da admin
+# ✅ Log dettagliato di tutte le azioni
+# ✅ Sistema di verifica manuale per abbonamenti dubbi
+
+# IMPORTANTE: 
+# 1. Sostituisci "/path/to/your/project/" con il percorso reale del tuo progetto
+# 2. Verifica il percorso di PHP con: which php
+# 3. Assicurati che il file check_subscriptions_simple.php sia eseguibile
+# 4. Testa il comando manualmente prima di aggiungerlo al cron
+
+# GESTIONE MANUALE:
+# - Gli admin possono gestire manualmente tutti gli abbonamenti
+# - Sistema di upgrade/downgrade/estensione manuale
+# - Tracciamento completo di chi ha fatto cosa e quando
+# - Possibilità di aggiungere note per ogni azione

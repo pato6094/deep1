@@ -26,27 +26,41 @@ if ($user_id != $_SESSION['user_id']) {
 }
 
 try {
-    // Aggiorna lo stato dell'abbonamento dell'utente
+    // Calcola la data di scadenza (1 mese da ora)
+    $end_date = date('Y-m-d H:i:s', strtotime('+1 month'));
+    
+    // Aggiorna lo stato dell'abbonamento dell'utente usando la stored procedure semplificata
     $stmt = $pdo->prepare("
-        UPDATE users 
-        SET subscription_status = 'active', 
-            subscription_id = :subscription_id,
-            subscription_start = NOW(),
-            subscription_end = DATE_ADD(NOW(), INTERVAL 1 MONTH)
-        WHERE id = :user_id
+        CALL UpdateSubscriptionSimple(?, 'active', ?, 'user', 'subscription_created', ?)
     ");
     
+    $notes = "Abbonamento creato tramite PayPal. Subscription ID: {$subscription_id}";
+    
     $result = $stmt->execute([
-        ':subscription_id' => $subscription_id,
-        ':user_id' => $user_id
+        $user_id,
+        $end_date,
+        $notes
     ]);
     
     if ($result) {
-        echo json_encode(['success' => true, 'message' => 'Abbonamento attivato']);
+        // Aggiorna anche il subscription_id nella tabella users
+        $stmt = $pdo->prepare("
+            UPDATE users 
+            SET subscription_id = ?
+            WHERE id = ?
+        ");
+        $stmt->execute([$subscription_id, $user_id]);
+        
+        echo json_encode([
+            'success' => true, 
+            'message' => 'Abbonamento attivato',
+            'end_date' => $end_date
+        ]);
     } else {
         echo json_encode(['success' => false, 'message' => 'Errore database']);
     }
 } catch (Exception $e) {
+    error_log("Errore process_subscription: " . $e->getMessage());
     echo json_encode(['success' => false, 'message' => 'Errore server']);
 }
 ?>

@@ -52,14 +52,28 @@ function is_admin($user_id, $pdo) {
 
 // Funzione per verificare se l'utente ha un abbonamento attivo
 function has_active_subscription($pdo, $user_id) {
-    $stmt = $pdo->prepare("SELECT subscription_status, subscription_end FROM users WHERE id = :user_id");
+    $stmt = $pdo->prepare("
+        SELECT subscription_status, subscription_end, subscription_grace_period 
+        FROM users 
+        WHERE id = :user_id
+    ");
     $stmt->execute([':user_id' => $user_id]);
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
     
     if (!$user) return false;
     
-    return $user['subscription_status'] === 'active' && 
-           ($user['subscription_end'] === null || strtotime($user['subscription_end']) > time());
+    // Controlla se l'abbonamento è attivo
+    if ($user['subscription_status'] === 'active') {
+        // Se non c'è data di scadenza o non è ancora scaduto
+        return $user['subscription_end'] === null || strtotime($user['subscription_end']) > time();
+    }
+    
+    // Controlla se è in periodo di grazia (abbonamento cancellato ma ancora valido)
+    if ($user['subscription_status'] === 'cancelled' && $user['subscription_grace_period']) {
+        return strtotime($user['subscription_grace_period']) > time();
+    }
+    
+    return false;
 }
 
 // Funzione per contare i deeplink dell'utente nel mese corrente
@@ -126,7 +140,7 @@ function get_total_clicks($pdo, $user_id) {
 // Funzione per ottenere le statistiche dettagliate di un deeplink
 function get_deeplink_stats($pdo, $deeplink_id, $user_id) {
     $stmt = $pdo->prepare("
-        SELECT id, original_url, clicks, created_at,
+        SELECT id, original_url, title, custom_name, clicks, created_at,
                DATE(created_at) as creation_date
         FROM deeplinks 
         WHERE id = :id AND user_id = :user_id
@@ -172,6 +186,54 @@ function get_monthly_performance($pdo, $user_id) {
     ");
     $stmt->execute([':user_id' => $user_id]);
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+// Funzione per ottenere informazioni dettagliate sull'abbonamento
+function get_subscription_details($pdo, $user_id) {
+    $stmt = $pdo->prepare("
+        SELECT 
+            subscription_status,
+            subscription_id,
+            subscription_start,
+            subscription_end,
+            subscription_updated_at,
+            subscription_update_source,
+            subscription_grace_period,
+            CASE 
+                WHEN subscription_status = 'active' AND subscription_end IS NOT NULL 
+                THEN DATEDIFF(subscription_end, NOW())
+                ELSE NULL 
+            END as days_until_expiry,
+            CASE 
+                WHEN subscription_status = 'cancelled' AND subscription_grace_period IS NOT NULL 
+                THEN DATEDIFF(subscription_grace_period, NOW())
+                ELSE NULL 
+            END as grace_days_remaining
+        FROM users 
+        WHERE id = :user_id
+    ");
+    $stmt->execute([':user_id' => $user_id]);
+    return $stmt->fetch(PDO::FETCH_ASSOC);
+}
+
+// Funzione per registrare un evento di abbonamento
+function log_subscription_event($pdo, $user_id, $subscription_id, $event_type, $event_data = null) {
+    try {
+        $stmt = $pdo->prepare("
+            INSERT INTO subscription_events (user_id, subscription_id, event_type, event_data) 
+            VALUES (?, ?, ?, ?)
+        ");
+        $stmt->execute([
+            $user_id,
+            $subscription_id,
+            $event_type,
+            $event_data ? json_encode($event_data) : null
+        ]);
+        return true;
+    } catch (Exception $e) {
+        error_log("Errore log evento abbonamento: " . $e->getMessage());
+        return false;
+    }
 }
 
 // Funzioni Admin

@@ -1,0 +1,30 @@
+# Configurazione Cron Job per il controllo automatico degli abbonamenti
+# 
+# Aggiungi questa riga al crontab del server per eseguire il controllo
+# degli abbonamenti scaduti ogni giorno alle 02:00
+#
+# Per modificare il crontab:
+# crontab -e
+#
+# Aggiungi questa riga:
+
+0 2 * * * /usr/bin/php /path/to/your/project/check_subscriptions.php >> /var/log/subscription_check.log 2>&1
+
+# Spiegazione:
+# 0 2 * * * = Ogni giorno alle 02:00
+# /usr/bin/php = Percorso dell'eseguibile PHP (potrebbe variare)
+# /path/to/your/project/check_subscriptions.php = Percorso completo al file
+# >> /var/log/subscription_check.log = Salva l'output in un file di log
+# 2>&1 = Reindirizza anche gli errori nel file di log
+
+# Esempio per eseguire ogni ora (per test):
+# 0 * * * * /usr/bin/php /path/to/your/project/check_subscriptions.php
+
+# Esempio per eseguire ogni 6 ore:
+# 0 */6 * * * /usr/bin/php /path/to/your/project/check_subscriptions.php
+
+# IMPORTANTE: 
+# 1. Sostituisci "/path/to/your/project/" con il percorso reale del tuo progetto
+# 2. Verifica il percorso di PHP con: which php
+# 3. Assicurati che il file check_subscriptions.php sia eseguibile
+# 4. Testa il comando manualmente prima di aggiungerlo al cron

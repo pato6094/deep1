@@ -1,0 +1,29 @@
+[25-Jun-2025 18:46:17 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''20' OFFSET '0'' at line 9 in /home/buonafor/public_html/ee1-main/admin/index.php:109
+Stack trace:
+#0 /home/buonafor/public_html/ee1-main/admin/index.php(109): PDOStatement->execute()
+#1 {main}
+  thrown in /home/buonafor/public_html/ee1-main/admin/index.php on line 109
+[25-Jun-2025 18:46:19 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''20' OFFSET '0'' at line 9 in /home/buonafor/public_html/ee1-main/admin/index.php:109
+Stack trace:
+#0 /home/buonafor/public_html/ee1-main/admin/index.php(109): PDOStatement->execute()
+#1 {main}
+  thrown in /home/buonafor/public_html/ee1-main/admin/index.php on line 109
+[25-Jun-2025 18:46:43 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''20' OFFSET '0'' at line 9 in /home/buonafor/public_html/ee1-main/admin/index.php:109
+Stack trace:
+#0 /home/buonafor/public_html/ee1-main/admin/index.php(109): PDOStatement->execute()
+#1 {main}
+  thrown in /home/buonafor/public_html/ee1-main/admin/index.php on line 109
+[25-Jun-2025 18:46:43 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''20' OFFSET '0'' at line 9 in /home/buonafor/public_html/ee1-main/admin/index.php:109
+Stack trace:
+#0 /home/buonafor/public_html/ee1-main/admin/index.php(109): PDOStatement->execute()
+#1 {main}
+  thrown in /home/buonafor/public_html/ee1-main/admin/index.php on line 109
+[25-Jun-2025 18:50:03 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''20' OFFSET '0'' at line 9 in /home/buonafor/public_html/ee1-main/admin/index.php:113
+Stack trace:
+#0 /home/buonafor/public_html/ee1-main/admin/index.php(113): PDOStatement->execute()
+#1 {main}
+  thrown in /home/buonafor/public_html/ee1-main/admin/index.php on line 113
+[25-Jun-2025 18:51:47 UTC] PHP Warning:  Undefined variable $users in /home/buonafor/public_html/ee1-main/admin/index.php on line 290
+[25-Jun-2025 18:51:47 UTC] PHP Warning:  foreach() argument must be of type array|object, null given in /home/buonafor/public_html/ee1-main/admin/index.php on line 290
+[25-Jun-2025 18:52:01 UTC] PHP Warning:  Undefined variable $users in /home/buonafor/public_html/ee1-main/admin/index.php on line 290
+[25-Jun-2025 18:52:01 UTC] PHP Warning:  foreach() argument must be of type array|object, null given in /home/buonafor/public_html/ee1-main/admin/index.php on line 290

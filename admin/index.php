@@ -241,10 +241,14 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <div class="container">
             <!-- Link Rapidi -->
             <div class="quick-links">
-                <h3 style="margin-bottom: 1rem; color: #004085;">🚀 Accesso Rapido</h3>
-                <a href="subscription_management_simple.php">📊 Gestione Abbonamenti</a>
+                <h3 style="margin-bottom: 1rem; color: #004085;">🚀 Accesso Rapido alle Funzioni Admin</h3>
+                <a href="subscription_management.php">📊 Gestione Abbonamenti Completa</a>
+                <a href="subscription_management_simple.php">📋 Gestione Abbonamenti Semplificata</a>
                 <a href="paypal_check.php">🔍 Controllo PayPal</a>
-                <a href="../check_subscriptions_simple.php" target="_blank">⚙️ Controllo Scadenze</a>
+                <a href="automated_monitoring.php">🤖 Monitoraggio Automatizzato</a>
+                <a href="../check_subscriptions.php" target="_blank">⚙️ Controllo Scadenze (Completo)</a>
+                <a href="../check_subscriptions_simple.php" target="_blank">⚙️ Controllo Scadenze (Semplice)</a>
+                <a href="../check_subscriptions_automated.php" target="_blank">🔄 Controllo Automatizzato</a>
             </div>
 
             <!-- Statistiche Admin -->
@@ -440,36 +444,39 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 </div>
             </div>
 
-            <!-- Avviso Sistema Semplificato -->
+            <!-- Avviso Sistema -->
             <div class="card" style="background: #fff3cd; border: 1px solid #ffeaa7;">
-                <h2 style="color: #856404;">⚠️ Sistema di Gestione Semplificato</h2>
+                <h2 style="color: #856404;">⚠️ Sistemi di Gestione Disponibili</h2>
                 <p style="color: #856404; margin-bottom: 1rem;">
-                    <strong>Importante:</strong> Questo sistema NON si aggiorna automaticamente quando gli utenti cancellano su PayPal.
+                    <strong>Importante:</strong> Sono disponibili diversi sistemi di gestione abbonamenti con funzionalità diverse.
                 </p>
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
                     <div>
-                        <h3 style="color: #856404;">✅ Cosa Funziona Automaticamente:</h3>
+                        <h3 style="color: #856404;">🔧 Sistema Semplificato</h3>
                         <ul style="color: #856404;">
-                            <li>Controllo scadenze giornaliero</li>
-                            <li>Passaggio automatico a "scaduto"</li>
-                            <li>Statistiche e report</li>
+                            <li>Gestione manuale completa</li>
+                            <li>Controllo scadenze automatico</li>
+                            <li>Nessuna dipendenza API</li>
                         </ul>
+                        <a href="subscription_management_simple.php" style="color: #856404;">Vai al Sistema Semplificato →</a>
                     </div>
                     <div>
-                        <h3 style="color: #856404;">🔧 Gestione Manuale Necessaria:</h3>
+                        <h3 style="color: #856404;">🤖 Sistema Automatizzato</h3>
                         <ul style="color: #856404;">
-                            <li>Cancellazioni PayPal</li>
-                            <li>Problemi di pagamento</li>
-                            <li>Richieste di supporto utenti</li>
+                            <li>Monitoraggio pagamenti automatico</li>
+                            <li>Periodo di grazia automatico</li>
+                            <li>Cancellazione automatica</li>
                         </ul>
+                        <a href="automated_monitoring.php" style="color: #856404;">Vai al Sistema Automatizzato →</a>
                     </div>
                     <div>
-                        <h3 style="color: #856404;">🛠️ Strumenti Disponibili:</h3>
+                        <h3 style="color: #856404;">🔍 Controllo PayPal</h3>
                         <ul style="color: #856404;">
-                            <li><a href="paypal_check.php" style="color: #856404;">Controllo PayPal</a></li>
-                            <li><a href="subscription_management_simple.php" style="color: #856404;">Gestione Abbonamenti</a></li>
-                            <li>Upgrade/Downgrade manuali</li>
+                            <li>Verifica manuale abbonamenti</li>
+                            <li>Gestione cancellazioni</li>
+                            <li>Controllo Subscription ID</li>
                         </ul>
+                        <a href="paypal_check.php" style="color: #856404;">Vai al Controllo PayPal →</a>
                     </div>
                 </div>
             </div>
@@ -477,4 +484,3 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
     </main>
 </body>
 </html>
-```

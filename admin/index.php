@@ -104,11 +104,16 @@ $query = "
     $where_clause
     GROUP BY u.id
     ORDER BY u.created_at DESC
-    LIMIT $per_page OFFSET $offset
+    LIMIT :per_page OFFSET :offset
 ";
 
 $stmt = $pdo->prepare($query);
-$stmt->execute($params);
+foreach ($params as $key => $value) {
+    $stmt->bindValue($key, $value);
+}
+$stmt->bindValue(':per_page', $per_page, PDO::PARAM_INT);
+$stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+$stmt->execute();
 $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
@@ -286,56 +291,62 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             </tr>
                         </thead>
                         <tbody>
-                            <?php foreach ($users as $user): ?>
-                            <tr>
-                                <td><?= $user['id'] ?></td>
-                                <td><?= htmlspecialchars($user['name']) ?></td>
-                                <td><?= htmlspecialchars($user['email']) ?></td>
-                                <td>
-                                    <span class="status-badge status-<?= $user['subscription_status'] ?>">
-                                        <?php
-                                        switch($user['subscription_status']) {
-                                            case 'active': echo 'Premium'; break;
-                                            case 'expired': echo 'Scaduto'; break;
-                                            case 'cancelled': echo 'Cancellato'; break;
-                                            default: echo 'Gratuito';
-                                        }
-                                        ?>
-                                    </span>
-                                    <?php if ($user['subscription_end']): ?>
-                                        <br><small style="color: #666;">
-                                            Scade: <?= date('d/m/Y', strtotime($user['subscription_end'])) ?>
-                                        </small>
-                                    <?php endif; ?>
-                                </td>
-                                <td><?= $user['total_deeplinks'] ?></td>
-                                <td><?= $user['total_clicks'] ?></td>
-                                <td><?= date('d/m/Y', strtotime($user['created_at'])) ?></td>
-                                <td>
-                                    <div class="user-actions">
-                                        <?php if ($user['subscription_status'] !== 'active'): ?>
-                                            <form method="POST" style="display: inline;">
-                                                <input type="hidden" name="user_id" value="<?= $user['id'] ?>">
-                                                <button type="submit" name="upgrade_user" 
-                                                        class="btn btn-success btn-sm"
-                                                        onclick="return confirm('Vuoi davvero aggiornare questo utente a Premium?')">
-                                                    Upgrade PRO
-                                                </button>
-                                            </form>
-                                        <?php else: ?>
-                                            <form method="POST" style="display: inline;">
-                                                <input type="hidden" name="user_id" value="<?= $user['id'] ?>">
-                                                <button type="submit" name="downgrade_user" 
-                                                        class="btn btn-secondary btn-sm"
-                                                        onclick="return confirm('Vuoi davvero riportare questo utente al piano gratuito?')">
-                                                    Downgrade
-                                                </button>
-                                            </form>
+                            <?php if (!empty($users)): ?>
+                                <?php foreach ($users as $user): ?>
+                                <tr>
+                                    <td><?= $user['id'] ?></td>
+                                    <td><?= htmlspecialchars($user['name']) ?></td>
+                                    <td><?= htmlspecialchars($user['email']) ?></td>
+                                    <td>
+                                        <span class="status-badge status-<?= $user['subscription_status'] ?>">
+                                            <?php
+                                            switch($user['subscription_status']) {
+                                                case 'active': echo 'Premium'; break;
+                                                case 'expired': echo 'Scaduto'; break;
+                                                case 'cancelled': echo 'Cancellato'; break;
+                                                default: echo 'Gratuito';
+                                            }
+                                            ?>
+                                        </span>
+                                        <?php if ($user['subscription_end']): ?>
+                                            <br><small style="color: #666;">
+                                                Scade: <?= date('d/m/Y', strtotime($user['subscription_end'])) ?>
+                                            </small>
                                         <?php endif; ?>
-                                    </div>
-                                </td>
-                            </tr>
-                            <?php endforeach; ?>
+                                    </td>
+                                    <td><?= $user['total_deeplinks'] ?></td>
+                                    <td><?= $user['total_clicks'] ?></td>
+                                    <td><?= date('d/m/Y', strtotime($user['created_at'])) ?></td>
+                                    <td>
+                                        <div class="user-actions">
+                                            <?php if ($user['subscription_status'] !== 'active'): ?>
+                                                <form method="POST" style="display: inline;">
+                                                    <input type="hidden" name="user_id" value="<?= $user['id'] ?>">
+                                                    <button type="submit" name="upgrade_user" 
+                                                            class="btn btn-success btn-sm"
+                                                            onclick="return confirm('Vuoi davvero aggiornare questo utente a Premium?')">
+                                                        Upgrade PRO
+                                                    </button>
+                                                </form>
+                                            <?php else: ?>
+                                                <form method="POST" style="display: inline;">
+                                                    <input type="hidden" name="user_id" value="<?= $user['id'] ?>">
+                                                    <button type="submit" name="downgrade_user" 
+                                                            class="btn btn-secondary btn-sm"
+                                                            onclick="return confirm('Vuoi davvero riportare questo utente al piano gratuito?')">
+                                                        Downgrade
+                                                    </button>
+                                                </form>
+                                            <?php endif; ?>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <tr>
+                                    <td colspan="8" style="text-align: center; color: #666;">Nessun utente trovato</td>
+                                </tr>
+                            <?php endif; ?>
                         </tbody>
                     </table>
                 </div>

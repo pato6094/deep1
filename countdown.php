@@ -10,7 +10,7 @@ if (!isset($_GET['id'])) {
 
 $id = $_GET['id'];
 
-$stmt = $pdo->prepare("SELECT deeplink, original_url, user_id, created_at FROM deeplinks WHERE id = :id");
+$stmt = $pdo->prepare("SELECT deeplink, original_url, title, user_id, created_at FROM deeplinks WHERE id = :id");
 $stmt->execute([':id' => $id]);
 $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -65,6 +65,12 @@ if (is_deeplink_expired($row['created_at'], $user_has_subscription)) {
                 <p style="color: #666; margin-bottom: 2rem;">
                     Questo deeplink è scaduto. I link gratuiti durano 5 giorni dalla creazione.
                 </p>
+                <?php if ($row['title']): ?>
+                <div style="margin-bottom: 1rem;">
+                    <strong>Titolo:</strong><br>
+                    <span style="color: #333;"><?= htmlspecialchars($row['title']) ?></span>
+                </div>
+                <?php endif; ?>
                 <div style="margin-bottom: 2rem;">
                     <strong>URL originale:</strong><br>
                     <span style="color: #666; word-break: break-all;"><?= htmlspecialchars($row['original_url']) ?></span>
@@ -100,6 +106,9 @@ if (strpos($row['deeplink'], 'youtube://') !== false) {
     $app_name = "Amazon";
     $app_icon = "🛒";
 }
+
+// Usa il titolo se disponibile, altrimenti usa il nome dell'app
+$display_title = $row['title'] ? htmlspecialchars($row['title']) : "Apertura " . htmlspecialchars($app_name);
 ?>
 
 <!DOCTYPE html>
@@ -107,7 +116,7 @@ if (strpos($row['deeplink'], 'youtube://') !== false) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Apertura <?= htmlspecialchars($app_name) ?> - DeepLink Pro</title>
+    <title><?= $display_title ?> - DeepLink Pro</title>
     <link rel="stylesheet" href="assets/style.css">
     <style>
         .countdown-container {
@@ -190,12 +199,21 @@ if (strpos($row['deeplink'], 'youtube://') !== false) {
             border-top: 1px solid #eee;
             display: none;
         }
+        .deeplink-title {
+            color: #333;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
     <div class="countdown-container">
         <div class="countdown-card">
             <div class="app-icon"><?= $app_icon ?></div>
+            <?php if ($row['title']): ?>
+                <div class="deeplink-title"><?= htmlspecialchars($row['title']) ?></div>
+            <?php endif; ?>
             <h2 style="color: #333; margin-bottom: 1rem;">
                 Sto aprendo <?= htmlspecialchars($app_name) ?> per te!
             </h2>

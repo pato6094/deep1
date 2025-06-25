@@ -1,0 +1,62 @@
+# Configurazione Cron Job per il sistema automatizzato di gestione abbonamenti
+# 
+# Questo sistema gestisce automaticamente:
+# - Controllo pagamenti mancanti
+# - Periodo di grazia automatico (7 giorni)
+# - Cancellazione automatica dopo il periodo di grazia
+# - Estensione automatica su pagamento ricevuto
+#
+# Per modificare il crontab:
+# crontab -e
+#
+# Aggiungi questa riga:
+
+0 2 * * * /usr/bin/php /path/to/your/project/check_subscriptions_automated.php >> /var/log/subscription_automated.log 2>&1
+
+# COME FUNZIONA IL SISTEMA AUTOMATIZZATO:
+
+# 1. CREAZIONE ABBONAMENTO:
+#    - Utente paga su PayPal
+#    - Sistema crea abbonamento + monitoraggio automatico
+#    - Imposta data prevista per prossimo pagamento (1 mese)
+
+# 2. CONTROLLO AUTOMATICO GIORNALIERO:
+#    - Verifica se ci sono pagamenti mancanti
+#    - Se pagamento mancante: inizia periodo di grazia (7 giorni)
+#    - Se periodo di grazia scaduto: cancella automaticamente
+
+# 3. REGISTRAZIONE PAGAMENTO:
+#    - Admin registra pagamento ricevuto
+#    - Sistema estende automaticamente abbonamento
+#    - Crea nuovo monitoraggio per prossimo mese
+
+# VANTAGGI:
+# ✅ Completamente automatizzato
+# ✅ Nessuna API PayPal necessaria
+# ✅ Periodo di grazia automatico
+# ✅ Gestione manuale quando necessario
+# ✅ Log completo di tutte le azioni
+# ✅ Statistiche dettagliate
+
+# ESEMPI DI USO:
+
+# Controllo manuale:
+# php check_subscriptions_automated.php
+
+# Simulazione pagamento (per test):
+# php check_subscriptions_automated.php simulate-payment 123 I-BW452GLLEP1G
+
+# Controllo ogni ora (per test):
+# 0 * * * * /usr/bin/php /path/to/your/project/check_subscriptions_automated.php
+
+# IMPORTANTE: 
+# 1. Sostituisci "/path/to/your/project/" con il percorso reale
+# 2. Verifica il percorso di PHP con: which php
+# 3. Testa il comando manualmente prima del cron
+# 4. Monitora i log per verificare il funzionamento
+
+# GESTIONE OPERATIVA:
+# - Il sistema funziona automaticamente
+# - Admin interviene solo per registrare pagamenti ricevuti
+# - Monitoraggio in tempo reale tramite pannello admin
+# - Report automatici giornalieri

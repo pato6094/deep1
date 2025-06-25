@@ -26,35 +26,28 @@ if ($user_id != $_SESSION['user_id']) {
 }
 
 try {
-    // Calcola la data di scadenza (1 mese da ora)
-    $end_date = date('Y-m-d H:i:s', strtotime('+1 month'));
+    // Usa la nuova stored procedure per creare l'abbonamento con monitoraggio automatico
+    $stmt = $pdo->prepare("CALL CreateSubscriptionWithMonitoring(?, ?, ?)");
     
-    // Aggiorna lo stato dell'abbonamento dell'utente usando la stored procedure semplificata
-    $stmt = $pdo->prepare("
-        CALL UpdateSubscriptionSimple(?, 'active', ?, 'user', 'subscription_created', ?)
-    ");
-    
-    $notes = "Abbonamento creato tramite PayPal. Subscription ID: {$subscription_id}";
+    $duration_months = 1; // Abbonamento mensile
     
     $result = $stmt->execute([
         $user_id,
-        $end_date,
-        $notes
+        $subscription_id,
+        $duration_months
     ]);
     
     if ($result) {
-        // Aggiorna anche il subscription_id nella tabella users
-        $stmt = $pdo->prepare("
-            UPDATE users 
-            SET subscription_id = ?
-            WHERE id = ?
-        ");
-        $stmt->execute([$subscription_id, $user_id]);
+        // Ottieni la data di scadenza aggiornata
+        $stmt = $pdo->prepare("SELECT subscription_end FROM users WHERE id = ?");
+        $stmt->execute([$user_id]);
+        $user_data = $stmt->fetch(PDO::FETCH_ASSOC);
         
         echo json_encode([
             'success' => true, 
-            'message' => 'Abbonamento attivato',
-            'end_date' => $end_date
+            'message' => 'Abbonamento attivato con monitoraggio automatico',
+            'end_date' => $user_data['subscription_end'],
+            'monitoring_enabled' => true
         ]);
     } else {
         echo json_encode(['success' => false, 'message' => 'Errore database']);

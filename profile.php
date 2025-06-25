@@ -109,10 +109,6 @@ $stats = $stmt->fetch(PDO::FETCH_ASSOC);
             border-color: #28a745;
             background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
         }
-        .subscription-card.cancelled {
-            border-color: #ffc107;
-            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
-        }
         .danger-zone {
             border: 2px solid #dc3545;
             border-radius: 15px;
@@ -147,26 +143,6 @@ $stats = $stmt->fetch(PDO::FETCH_ASSOC);
         .stat-mini-label {
             font-size: 0.875rem;
             color: #666;
-        }
-        .cancel-subscription-btn {
-            background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
-            color: #212529;
-            border: none;
-            padding: 0.75rem 1.5rem;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        .cancel-subscription-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(255, 193, 7, 0.4);
-        }
-        .cancel-subscription-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
         }
         .paypal-info {
             background: #e7f3ff;
@@ -235,54 +211,34 @@ $stats = $stmt->fetch(PDO::FETCH_ASSOC);
             </div>
 
             <!-- Stato Abbonamento -->
-            <div class="subscription-card <?= $has_subscription ? ($user['subscription_status'] === 'cancelled' ? 'cancelled' : 'premium') : '' ?>">
+            <div class="subscription-card <?= $has_subscription ? 'premium' : '' ?>">
                 <h2>📋 Stato Abbonamento</h2>
                 
                 <?php if ($has_subscription): ?>
-                    <?php if ($user['subscription_status'] === 'cancelled'): ?>
-                        <div style="margin: 1rem 0;">
-                            <span style="background: #ffc107; color: #856404; padding: 0.25rem 0.75rem; border-radius: 12px; font-weight: 600;">
-                                ⚠ Abbonamento Cancellato
-                            </span>
-                        </div>
-                        <p style="color: #856404; margin-bottom: 1rem;">
-                            Il tuo abbonamento è stato cancellato su PayPal e rimarrà attivo fino al 
-                            <strong><?= date('d/m/Y', strtotime($user['subscription_end'])) ?></strong>.
-                        </p>
-                        <p style="color: #666; margin-bottom: 1.5rem;">
-                            Dopo questa data, il tuo account tornerà al piano gratuito.
-                        </p>
-                        <div class="paypal-info">
-                            <strong>ℹ️ Informazione:</strong> L'abbonamento è stato cancellato anche su PayPal. 
-                            Non verranno effettuati ulteriori addebiti automatici.
-                        </div>
-                    <?php else: ?>
-                        <div style="margin: 1rem 0;">
-                            <span style="background: #28a745; color: white; padding: 0.25rem 0.75rem; border-radius: 12px; font-weight: 600;">
-                                ✓ Premium Attivo
-                            </span>
-                        </div>
-                        <p style="color: #155724; margin-bottom: 1rem;">
-                            Il tuo abbonamento Premium è attivo e si rinnoverà automaticamente il 
-                            <strong><?= date('d/m/Y', strtotime($user['subscription_end'])) ?></strong>.
-                        </p>
-                        <ul style="color: #155724; margin-bottom: 1.5rem;">
-                            <li>✓ Deeplink illimitati</li>
-                            <li>✓ URL personalizzati</li>
-                            <li>✓ Statistiche avanzate</li>
-                            <li>✓ Link permanenti</li>
-                        </ul>
-                        
-                        <button type="button" id="cancelSubscriptionBtn" class="cancel-subscription-btn"
-                                onclick="cancelSubscription()">
-                            Cancella Abbonamento PayPal
-                        </button>
-                        
-                        <div class="paypal-info">
-                            <strong>💳 PayPal:</strong> La cancellazione avverrà direttamente su PayPal. 
-                            L'abbonamento rimarrà attivo fino alla scadenza naturale, ma non si rinnoverà automaticamente.
-                        </div>
-                    <?php endif; ?>
+                    <div style="margin: 1rem 0;">
+                        <span style="background: #28a745; color: white; padding: 0.25rem 0.75rem; border-radius: 12px; font-weight: 600;">
+                            ✓ Premium Attivo
+                        </span>
+                    </div>
+                    <p style="color: #155724; margin-bottom: 1rem;">
+                        Il tuo abbonamento Premium è attivo e si rinnoverà automaticamente il 
+                        <strong><?= date('d/m/Y', strtotime($user['subscription_end'])) ?></strong>.
+                    </p>
+                    <ul style="color: #155724; margin-bottom: 1.5rem;">
+                        <li>✓ Deeplink illimitati</li>
+                        <li>✓ URL personalizzati</li>
+                        <li>✓ Statistiche avanzate</li>
+                        <li>✓ Link permanenti</li>
+                    </ul>
+                    
+                    <div class="paypal-info">
+                        <strong>💳 Gestione Abbonamento:</strong> Per modificare o cancellare il tuo abbonamento, 
+                        accedi al tuo account PayPal e gestisci i pagamenti automatici dalla sezione "Impostazioni".
+                        <br><br>
+                        <a href="https://www.paypal.com/myaccount/autopay/" target="_blank" style="color: #004085; text-decoration: underline;">
+                            Gestisci abbonamenti su PayPal →
+                        </a>
+                    </div>
                     
                     <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #dee2e6;">
                         <small style="color: #666;">
@@ -309,6 +265,17 @@ $stats = $stmt->fetch(PDO::FETCH_ASSOC);
                     <a href="pricing.php" class="btn btn-success">
                         🚀 Diventa Premium
                     </a>
+                    
+                    <div style="margin-top: 1rem; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
+                        <h4 style="color: #333; margin-bottom: 0.5rem;">Vantaggi del Piano Premium:</h4>
+                        <ul style="color: #666; margin: 0;">
+                            <li>✓ Deeplink illimitati ogni mese</li>
+                            <li>✓ URL personalizzati (es: tuosito.com/mio-link)</li>
+                            <li>✓ Link permanenti che non scadono mai</li>
+                            <li>✓ Statistiche dettagliate sui click</li>
+                            <li>✓ Supporto prioritario</li>
+                        </ul>
+                    </div>
                 <?php endif; ?>
             </div>
 
@@ -384,57 +351,5 @@ $stats = $stmt->fetch(PDO::FETCH_ASSOC);
             </div>
         </div>
     </main>
-
-    <script>
-        function cancelSubscription() {
-            if (!confirm('Sei sicuro di voler cancellare l\'abbonamento PayPal?\n\nL\'abbonamento rimarrà attivo fino alla scadenza naturale, ma non si rinnoverà automaticamente.\n\nQuesta azione non può essere annullata.')) {
-                return;
-            }
-
-            const button = document.getElementById('cancelSubscriptionBtn');
-            const originalText = button.textContent;
-            
-            button.textContent = 'Cancellando su PayPal...';
-            button.disabled = true;
-
-            fetch('cancel_subscription.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({})
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Mostra messaggio di successo
-                    const alert = document.createElement('div');
-                    alert.className = 'alert alert-success';
-                    alert.textContent = data.message;
-                    alert.style.position = 'fixed';
-                    alert.style.top = '20px';
-                    alert.style.right = '20px';
-                    alert.style.zIndex = '9999';
-                    alert.style.maxWidth = '400px';
-                    document.body.appendChild(alert);
-                    
-                    // Ricarica la pagina dopo 2 secondi
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 2000);
-                } else {
-                    alert('Errore: ' + data.message);
-                    button.textContent = originalText;
-                    button.disabled = false;
-                }
-            })
-            .catch(error => {
-                console.error('Errore:', error);
-                alert('Errore durante la cancellazione dell\'abbonamento');
-                button.textContent = originalText;
-                button.disabled = false;
-            });
-        }
-    </script>
 </body>
 </html>
